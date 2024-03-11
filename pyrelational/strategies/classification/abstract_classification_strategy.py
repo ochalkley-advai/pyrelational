@@ -46,6 +46,9 @@ class ClassificationStrategy(Strategy, ABC):
         :return: list of indices to annotate
         """
         output = self.train_and_infer(data_manager=data_manager, model_manager=model_manager).mean(0)
+        if output.dim() == 1:
+            # Unsqueezes at dimension 0, making a 1D tensor 2D
+            output = output.unsqueeze(0)
         if not torch.allclose(output.sum(1), torch.tensor(1.0)):
             output = softmax(output)
         uncertainty = self.scoring_function(softmax(output))
