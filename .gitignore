@@ -146,3 +146,6 @@ dmypy.json
 
 # Lightning logs
 **/lightning_logs
+
+# vim
+*.swp
