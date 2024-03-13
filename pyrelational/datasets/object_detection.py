@@ -1,31 +1,24 @@
-import os
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
-import torchvision.datasets as datasets
-from PIL import Image
+import torch
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose
+from torchvision.datasets import VOCDetection
+from torchvision.transforms import Compose, ToTensor
 
 
-class VOCDetectionDataset(Dataset):  # type: ignore
+class VOCDetectionDataset(Dataset[Tuple[torch.Tensor, Dict[str, Any]]]):
     """
-    Pascal VOC dataset for object detection.
+    Dataset class for Pascal VOC that includes functionality for creating
+    random train/test splits. Inherits from PyTorch's Dataset class.
 
-    This dataset includes images along with their corresponding annotations
-    (object bounding boxes and labels). It's widely used for object detection tasks.
-    This class automatically downloads the dataset and prepares it for use in a
-    PyTorch model, ensuring no manual download is required.
-
-    Parameters:
-    - root (str): The directory where the dataset will be stored.
-      Defaults to './data/voc'.
-    - year (str): The year of the VOC dataset edition. Defaults to '2012'.
-    - image_set (str): Specify 'train', 'trainval', or 'val' to use the respective
-      dataset. Default is 'val'.
-    - download (bool): If true, downloads the dataset from the internet and
-      puts it in the root directory. If the dataset is already downloaded, it is not
-      downloaded again.
-    - transform (Callable[[Image.Image], Any], optional): Optional transform to be applied on a sample.
+    Attributes:
+        root (str): Directory where the VOC dataset is located or will be downloaded.
+        year (str): The dataset's year. Defaults to '2012'.
+        image_set (str): The type of image set to use ('train', 'val', 'trainval', 'test').
+        transform (Compose, optional): A function/transform that takes in an image and returns a transformed version.
+        download (bool): If true, downloads the dataset from the internet and puts it in the root directory.
+        n_splits (int): The number of random splits to create.
+        test_size (float): The proportion of the dataset to include in the test split.
     """
 
     def __init__(
@@ -33,34 +26,34 @@ class VOCDetectionDataset(Dataset):  # type: ignore
         root: str = "./data/voc",
         year: str = "2012",
         image_set: str = "val",
+        transform: Compose = None,
         download: bool = True,
-        transform: Optional[Callable[[Image.Image], Any]] = None,
-    ):
+        n_splits: int = 5,
+        test_size: float = 0.2,
+    ) -> None:
         super().__init__()
-        self.root = root
-        self.transform = transform or Compose([])
-        self.dataset = datasets.VOCDetection(
-            root=root, year=year, image_set=image_set, download=download, transform=transform
+        self.dataset = VOCDetection(
+            root, year=year, image_set=image_set, download=download, transform=transform or ToTensor()
         )
 
-    def __getitem__(self, idx: int) -> Tuple[Image.Image, Dict[str, Any]]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
-        Get item method for dataset indexing.
+        Retrieve an item from the dataset.
 
         Parameters:
-        - idx (int): Index of the item.
+            idx (int): The index of the item.
 
         Returns:
-        - Tuple[Image.Image, Dict[str, Any]]: Tuple containing the image and its annotations.
+            Tuple containing the image (as a torch.Tensor) and its annotations (as a dictionary).
         """
-        image, target = self.dataset[idx]
-        return image, target
+        image, annotation = self.dataset[idx]
+        return image, annotation
 
     def __len__(self) -> int:
         """
-        Get the total number of samples in the dataset.
+        Determine the total number of samples in the dataset.
 
         Returns:
-        - int: Total number of samples.
+            The number of samples.
         """
         return len(self.dataset)

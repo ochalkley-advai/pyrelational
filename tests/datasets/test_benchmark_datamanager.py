@@ -8,6 +8,7 @@ from pyrelational.datasets.benchmark_datamanager import (
     create_regression_cold_start,
     create_warm_start,
 )
+from pyrelational.datasets.object_detection import VOCDetectionDataset
 
 
 class TestBenchmarkDataManager(TestCase):
@@ -28,6 +29,14 @@ class TestBenchmarkDataManager(TestCase):
         test_indices = list(dataset.data_splits[0][1])
         dm = create_warm_start(dataset, train_indices=train_indices, test_indices=test_indices)
         self.assertEqual(len(dm), 442)
+
+    def test_create_warm_start_object_detection(self) -> None:
+        """Check shape correctness of dataset."""
+        dataset = VOCDetectionDataset()
+        train_indices = list(dataset.data_splits[0][0])
+        test_indices = list(dataset.data_splits[0][1])
+        dm = create_warm_start(dataset, train_indices=train_indices, test_indices=test_indices)
+        self.assertEqual(len(dm), 569)
 
     def test_create_classification_cold_start(self) -> None:
         """Check shape correctness of dataset."""
