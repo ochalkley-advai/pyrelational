@@ -102,32 +102,29 @@ def object_detection_entropy(
 
     :return: tensor of entropy based uncertainties
     """
-    # assert torch.allclose(
-    #     prob_dist.sum(axis), torch.tensor(1.0)
-    # ), "input should be probability distributions along specified axis"
+    assert torch.allclose(
+        prob_dist.sum(axis), torch.tensor(1.0)
+    ), "input should be probability distributions along specified axis"
+    log_probs = prob_dist * torch.log2(prob_dist)
+    raw_entropy = 0 - torch.sum(log_probs, dim=axis)
+    normalised_entropy: Tensor = raw_entropy / math.log2(prob_dist.size(axis))
+    return normalised_entropy
 
-    uncertainty = []
-    for batch_conf_scores in prob_dist:
-        for img_conf_scores in batch_conf_scores:
-            img_entropy = []
-            for bbox_scores in img_conf_scores:
-                bbox_conf_scores = softmax(bbox_scores)
-                bbox_entropy_score = -torch.sum(
-                    bbox_conf_scores * torch.log2(bbox_conf_scores)
-                )
-                img_entropy.append(bbox_entropy_score)
+    # uncertainty = []
+    # for batch_conf_scores in prob_dist:
+    #     for img_conf_scores in batch_conf_scores:
+    #         img_entropy = []
+    #         for bbox_scores in img_conf_scores:
+    #             bbox_conf_scores = softmax(bbox_scores)
+    #             bbox_entropy_score = -torch.sum(
+    #                 bbox_conf_scores * torch.log2(bbox_conf_scores)
+    #             )
+    #             img_entropy.append(bbox_entropy_score)
 
-            uncertainty.append(
-                compute_total_uncertainty(img_entropy, aggregation_type)
-            )
-    return uncertainty
-
-    # log_probs = prob_dist * torch.log2(prob_dist)
-    # raw_entropy = 0 - torch.sum(log_probs, dim=axis)
-    # normalised_entropy: Tensor = raw_entropy / math.log2(
-    #     prob_dist.size(axis)
-    # )
-    # return normalised_entropy
+    #         uncertainty.append(
+    #             compute_total_uncertainty(img_entropy, aggregation_type)
+    #         )
+    # return uncertainty
 
 
 def softmax(scores: Tensor, base: float = math.e, axis: int = -1) -> Tensor:
