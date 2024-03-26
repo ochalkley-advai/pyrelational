@@ -60,7 +60,7 @@ class ObjectDetectionStrategy(Strategy, ABC):
         uncertainty = self.compute_total_uncertainty(
             output, self.aggregation_type
         )
-        print("uncertainty:", uncertainty)
+
         ixs = torch.argsort(
             torch.Tensor(uncertainty), descending=True
         ).tolist()
